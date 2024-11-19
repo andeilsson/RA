@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>AR Fritadeira - Detecção de Superfície</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+    <script>
+        AFRAME.registerComponent('surface-tracker', {
+            init: function () {
+                this.el.sceneEl.addEventListener('enter-vr', () => {
+                    if (this.el.sceneEl.is('ar-mode')) {
+                        // Iniciar detecção de superfície
+                        const session = this.el.sceneEl.renderer.xr.getSession();
+                        session.requestReferenceSpace('local').then((space) => {
+                            this.refSpace = space;
+                        });
+                        
+                        session.addEventListener('select', () => {
+                            // Colocar o modelo 3D quando o usuário tocar na superfície
+                            this.placeModel();
+                        });
+                    }
+                });
+            },
+            
+            placeModel: function () {
+                const model = document.createElement('a-entity');
+                model.setAttribute('gltf-model', '#fritadeira-model');
+                model.setAttribute('scale', '0.5 0.5 0.5');
+                model.setAttribute('position', '0 0 0');
+                model.setAttribute('animation-mixer', '');
+                this.el.appendChild(model);
+            }
+        });
+    </script>
+    <style>
+        body { margin: 0; }
+        .ar-button {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 24px;
+            background: #007AFF;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            z-index: 1000;
+        }
+    </style>
+</head>
+<body>
+    <a-scene
+        webxr="requiredFeatures: hit-test,local-floor;"
+        renderer="colorManagement: true"
+        surface-tracker>
+        
+        <!-- Carregamento do modelo 3D -->
+        <a-assets>
+            <a-asset-item id="fritadeira-model" src="https://raw.githubusercontent.com/andeilsson/usina/5efda34ad6f2216cf79068b2867651b8def67883/usina.glb"></a-asset-item>
+        </a-assets>
+
+        <!-- Configuração da cena AR -->
+        <a-camera position="0 1.6 0"></a-camera>
+        
+        <!-- Indicador de superfície -->
+        <a-entity
+            id="reticle"
+            geometry="primitive: ring; radiusInner: 0.02; radiusOuter: 0.03"
+            material="color: #007AFF; shader: flat"
+            position="0 0 -3"
+            rotation="-90 0 0"
+            visible="false">
+        </a-entity>
+    </a-scene>
+
+    <button class="ar-button" onclick="startAR()">Iniciar AR</button>
+
+    <script>
+        function startAR() {
+            const sceneEl = document.querySelector('a-scene');
+            if (sceneEl.is('ar-mode')) {
+                return;
+            }
+            sceneEl.enterVR();
+        }
+    </script>
+</body>
+</html>
